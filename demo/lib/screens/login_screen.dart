@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:demo/services/user_service.dart';
 import 'package:demo/app_style.dart';
 import 'package:flutter/cupertino.dart';
-// ignore: unused_import
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:demo/screens/signup_screen.dart';
-import 'package:demo/screens/dashboard_screen.dart'; // Import your dashboard screen file
+import 'package:demo/screens/dashboard_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Login extends StatefulWidget {
   static const String id = "/login";
@@ -22,16 +21,36 @@ class _LoginState extends State<Login> {
     final String email = emailController.text;
     final String password = passwordController.text;
 
-    final userData = await APIService.loginUser(email, password);
+    final Map<String, dynamic>? response = await APIService.loginUser(email, password);
 
-    if (userData != null) {
-      print('User logged in successfully');
-      // Navigate to the dashboard after successful login
-      Navigator.of(context).pushReplacementNamed(Dashboard.id);
+    if (response != null && response.containsKey('statusCode') && response['statusCode'] == 200) {
+      final String? rawCookie = response['set-cookie'];
+
+      if (rawCookie != null) {
+        await saveCookie(rawCookie);
+
+        // ignore: unused_local_variable
+        String extractedData = response['data'] as String; // Adjust based on your API response structure
+
+        Navigator.of(context).pushReplacementNamed(Dashboard.id);
+      } else {
+        print('Cookie is null');
+        // Handle null cookie if required
+      }
     } else {
       print('Failed to log in');
-      // Handle errors or display an error message
+      // Handle errors or display an error message based on your API's response structure
     }
+  }
+
+  Future<void> saveCookie(String cookie) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString('cookie', cookie);
+  }
+
+  Future<String?> getCookie() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString('cookie');
   }
 
   @override
@@ -51,14 +70,14 @@ class _LoginState extends State<Login> {
                 Align(
                   alignment: Alignment.topCenter,
                   child: Image.asset(
-                    logoImage, // Replace with your actual logo image path
+                    'assets/images/logo.png', // Replace with your actual logo image path
                     height: size.height * 0.1,
                   ),
                 ),
                 SizedBox(height: size.height * 0.023),
                 Text(
                   "Login",
-                  style: Theme.of(context).textTheme.titleLarge,
+                  style: Theme.of(context).textTheme.headline5,
                 ),
                 SizedBox(height: size.height * 0.018),
                 TextField(
@@ -69,7 +88,16 @@ class _LoginState extends State<Login> {
                     // Include your email icon
                   ),
                 ),
-                // Add other TextFields like password field, etc.
+                SizedBox(height: size.height * 0.018),
+                TextField(
+                  controller: passwordController,
+                  obscureText: true,
+                  style: const TextStyle(color: kLightTextColor),
+                  decoration: InputDecoration(
+                    hintText: "Password",
+                    // Include your password icon
+                  ),
+                ),
                 SizedBox(height: size.height * 0.025),
                 ElevatedButton(
                   onPressed: () {
@@ -77,7 +105,7 @@ class _LoginState extends State<Login> {
                   },
                   child: Text(
                     "Login",
-                    style: Theme.of(context).textTheme.titleMedium,
+                    style: Theme.of(context).textTheme.button,
                   ),
                 ),
                 SizedBox(height: size.height * 0.034),
@@ -86,7 +114,7 @@ class _LoginState extends State<Login> {
                   children: [
                     Text(
                       "Don't have an account?\t",
-                      style: Theme.of(context).textTheme.titleSmall,
+                      style: Theme.of(context).textTheme.subtitle1,
                     ),
                     CupertinoButton(
                       padding: EdgeInsets.zero,
@@ -98,7 +126,7 @@ class _LoginState extends State<Login> {
                         "Sign Up",
                         style: Theme.of(context)
                             .textTheme
-                            .titleSmall!
+                            .subtitle1!
                             .copyWith(color: kTextColor),
                       ),
                     ),
