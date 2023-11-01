@@ -21,25 +21,43 @@ class _LoginState extends State<Login> {
     final String email = emailController.text;
     final String password = passwordController.text;
 
-    final Map<String, dynamic>? response = await APIService.loginUser(email, password);
+    try {
+      final Map<String, dynamic>? response = await APIService.loginUser(email, password);
 
-    if (response != null && response.containsKey('statusCode') && response['statusCode'] == 200) {
-      final String? rawCookie = response['set-cookie'];
+      if (response != null && response.containsKey('statusCode') && response['statusCode'] == 200) {
+        final String? rawCookie = response['set-cookie'];
 
-      if (rawCookie != null) {
-        await saveCookie(rawCookie);
+        if (rawCookie != null) {
+          await saveCookie(rawCookie);
 
-        // ignore: unused_local_variable
-        String extractedData = response['data'] as String; // Adjust based on your API response structure
+          final String? token = response['token']; // Extract token from the response
 
-        Navigator.of(context).pushReplacementNamed(Dashboard.id);
+          if (token != null) {
+            // Token handling - saving token to SharedPreferences
+            await saveToken(token);
+          }
+
+          // Successful login, move to dashboard screen
+          Navigator.of(context).pushReplacementNamed(Dashboard.id);
+        } else {
+          // Handle null cookie if required
+          print('Cookie is null');
+        }
       } else {
-        print('Cookie is null');
-        // Handle null cookie if required
+        // Handle login failure
+        print('Failed to log in');
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Failed to log in'),
+          duration: Duration(seconds: 3),
+        ));
       }
-    } else {
-      print('Failed to log in');
-      // Handle errors or display an error message based on your API's response structure
+    } catch (e) {
+      // Handle network errors or exceptions
+      print('Exception occurred: $e');
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('An error occurred. Please try again.'),
+        duration: Duration(seconds: 3),
+      ));
     }
   }
 
@@ -48,9 +66,9 @@ class _LoginState extends State<Login> {
     await prefs.setString('cookie', cookie);
   }
 
-  Future<String?> getCookie() async {
+  Future<void> saveToken(String token) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString('cookie');
+    await prefs.setString('token', token);
   }
 
   @override
