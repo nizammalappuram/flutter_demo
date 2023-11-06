@@ -22,8 +22,6 @@
 //   }
 // }
 
-
-
 import 'package:flutter/material.dart';
 import 'package:demo/screens/signup_screen.dart';
 import 'package:demo/screens/login_screen.dart';
@@ -42,7 +40,8 @@ class MyApp extends StatelessWidget {
       routes: {
         Signup.id: (context) => Signup(),
         Login.id: (context) => Login(),
-        Dashboard.id: (context) => Dashboard(), // Replace 'Dashboard' with your actual dashboard screen
+        Dashboard.id: (context) =>
+            Dashboard(), // Replace 'Dashboard' with your actual dashboard screen
       },
     );
   }
