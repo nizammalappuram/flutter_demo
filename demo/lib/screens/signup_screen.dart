@@ -1,12 +1,9 @@
-
-
 // import 'package:flutter/material.dart';
 // import 'package:demo/services/user_service.dart';
 // import 'package:demo/app_style.dart';
 // import 'package:flutter/cupertino.dart';
 // import 'package:demo/screens/login_screen.dart';
 // import 'package:flutter_svg/flutter_svg.dart';
-
 
 // class Signup extends StatefulWidget {
 //   static const String id = "/signup";
@@ -27,7 +24,6 @@
 //     final String password = passwordController.text;
 
 //     final userData = await APIService.registerUser(email, username, password);
-
 
 //     if (userData != null) {
 //       print('User registered successfully');
@@ -206,18 +202,16 @@
 //   }
 // }
 
-
-
-
 // -----------------------------------------------------------------------------
 
 // test code
 
+import 'dart:convert';
+import 'dart:typed_data'; // Import dart:typed_data for Uint8List
 
 import 'package:flutter/material.dart';
 import 'package:demo/services/user_service.dart';
 import 'package:demo/screens/login_screen.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
 class Signup extends StatefulWidget {
   static const String id = "/signup";
@@ -227,32 +221,69 @@ class Signup extends StatefulWidget {
 }
 
 class _SignupState extends State<Signup> {
-  final TextEditingController emailController = TextEditingController();
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final TextEditingController confirmPasswordController = TextEditingController();
+  final TextEditingController phoneController = TextEditingController();
+  final TextEditingController captchaController = TextEditingController();
 
   List<String> roles = ['student', 'academy', 'mentor', 'trainer'];
   String? selectedRole;
+  Image? _captchaImage; // Captcha image variable
+
+  @override
+  void initState() {
+    displayCaptcha(); // Fetch the captcha image URL when the UI initializes
+    super.initState();
+  }
+
+  Future<void> displayCaptcha() async {
+    final captchaImageData = await APIService.fetchCaptchaImageData();
+
+    if (captchaImageData != null &&
+        captchaImageData.containsKey('imageBase64')) {
+      setState(() {
+        final base64String = captchaImageData['imageBase64'];
+        final List<int> bytes = base64Decode(base64String);
+        _captchaImage = Image.memory(Uint8List.fromList(bytes));
+      });
+    }
+  }
 
   Future<void> registerUser() async {
-    if (selectedRole == null) {
-      print('Please select a role');
-      return;
-    }
+    try {
+      final String username = usernameController.text;
+      final String password = passwordController.text;
+      final String phone = phoneController.text;
+      final String captcha = captchaController.text;
 
-    final String email = emailController.text;
-    final String username = usernameController.text;
-    final String password = passwordController.text;
+      if (selectedRole == null) {
+        print('Please select a role');
+        return;
+      }
 
-    final userData = await APIService.registerUser(email, username, password, selectedRole!);
+      final response = await APIService.registerUser(
+          username, password, phone, captcha, selectedRole);
 
-    if (userData != null) {
-      print('User registered successfully');
-      Navigator.of(context).pushReplacementNamed(Login.id);
-    } else {
-      print('Failed to register user');
-      // Handle errors or display an error message
+      if (response != null && response.containsKey('message')) {
+        final message = response['message'];
+        if (message == 'user created') {
+          print('User registered successfully');
+          Navigator.of(context).pushReplacementNamed(Login.id);
+        } else if (message == 'User Already Exists') {
+          print(
+              'User already exists. Please use a different username or login.');
+          // Handle informing the user about an existing user with feedback
+        } else {
+          print('Failed to register user: $message');
+          // Handle other registration failure scenarios
+        }
+      } else {
+        print('Failed to register user');
+        // Handle registration failure
+      }
+    } catch (e) {
+      print('Exception occurred: $e');
+      // Handle exception
     }
   }
 
@@ -279,7 +310,7 @@ class _SignupState extends State<Signup> {
                 SizedBox(height: size.height * 0.023),
                 Text(
                   "Sign Up",
-                  style: Theme.of(context).textTheme.headline5,
+                  style: Theme.of(context).textTheme.headline6,
                 ),
                 SizedBox(height: size.height * 0.018),
                 Text(
@@ -288,30 +319,10 @@ class _SignupState extends State<Signup> {
                 ),
                 SizedBox(height: size.height * 0.020),
                 TextField(
-                  controller: emailController,
-                  style: TextStyle(color: Colors.black),
-                  decoration: InputDecoration(
-                    hintText: "Email",
-                    prefixIcon: IconButton(
-                      onPressed: null,
-                      icon: SvgPicture.asset(
-                        'assets/icons/email.svg', // Replace with your email icon path
-                      ),
-                    ),
-                  ),
-                ),
-                SizedBox(height: size.height * 0.016),
-                TextField(
                   controller: usernameController,
                   style: TextStyle(color: Colors.black),
                   decoration: InputDecoration(
                     hintText: "Username",
-                    prefixIcon: IconButton(
-                      onPressed: null,
-                      icon: SvgPicture.asset(
-                        'assets/icons/user.svg', // Replace with your user icon path
-                      ),
-                    ),
                   ),
                 ),
                 SizedBox(height: size.height * 0.016),
@@ -321,50 +332,51 @@ class _SignupState extends State<Signup> {
                   style: TextStyle(color: Colors.black),
                   decoration: InputDecoration(
                     hintText: "Password",
-                    prefixIcon: IconButton(
-                      onPressed: null,
-                      icon: SvgPicture.asset(
-                        'assets/icons/lock.svg', // Replace with your lock icon path
-                      ),
-                    ),
                   ),
                 ),
                 SizedBox(height: size.height * 0.016),
                 TextField(
-                  controller: confirmPasswordController,
-                  obscureText: true,
+                  controller: phoneController,
                   style: TextStyle(color: Colors.black),
                   decoration: InputDecoration(
-                    hintText: "Confirm Password",
-                    prefixIcon: IconButton(
-                      onPressed: null,
-                      icon: SvgPicture.asset(
-                        'assets/icons/lock.svg', // Replace with your lock icon path
-                      ),
-                    ),
+                    hintText: "Phone",
                   ),
                 ),
+                SizedBox(height: size.height * 0.020),
+                // Display the captcha image before the captcha text field
+                _captchaImage != null ? _captchaImage! : Container(),
                 SizedBox(height: size.height * 0.025),
-                DropdownButton<String>(
-                  value: selectedRole,
-                  onChanged: (String? newValue) {
-                    setState(() {
-                      selectedRole = newValue;
-                    });
-                  },
-                  items: roles.map((String role) {
-                    return DropdownMenuItem<String>(
-                      value: role,
-                      child: Text(role),
-                    );
-                  }).toList(),
+                TextField(
+                  controller: captchaController,
+                  style: TextStyle(color: Colors.black),
+                  decoration: InputDecoration(
+                    hintText: "Captcha",
+                  ),
+                ),
+                Container(
+                  height: size.height * 0.06,
+                  child: SingleChildScrollView(
+                    child: DropdownButton<String>(
+                      value: selectedRole,
+                      onChanged: (String? newValue) {
+                        setState(() {
+                          selectedRole = newValue;
+                        });
+                      },
+                      items: roles.map((String role) {
+                        return DropdownMenuItem<String>(
+                          value: role,
+                          child: Text(role),
+                        );
+                      }).toList(),
+                    ),
+                  ),
                 ),
                 SizedBox(height: size.height * 0.025),
                 ElevatedButton(
                   onPressed: registerUser,
                   child: Text("Sign Up", style: TextStyle(color: Colors.white)),
                 ),
-                // Other UI components...
               ],
             ),
           ),
@@ -373,4 +385,3 @@ class _SignupState extends State<Signup> {
     );
   }
 }
-
