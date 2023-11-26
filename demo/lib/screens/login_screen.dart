@@ -91,7 +91,7 @@ class _LoginState extends State<Login> {
       }
       print('Failed to log in. Invalid response or token');
       setState(() {
-        errorMessage = 'Invalid response or token';
+        errorMessage = 'username and password are incorrect';
       });
     } on DioError catch (e) {
       print('DioError occurred: $e');

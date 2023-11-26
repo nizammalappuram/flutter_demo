@@ -55,6 +55,7 @@
 //   }
 // }
 
+import 'package:demo/services/user_service.dart';
 import 'package:flutter/material.dart';
 import 'package:demo/screens/home_screen.dart';
 import 'package:demo/screens/welcome_screen.dart';
@@ -65,7 +66,7 @@ import 'package:demo/app_config.dart';
 class MyApp extends StatelessWidget {
   final AppConfig config;
 
-  MyApp({required this.config});
+  MyApp({required this.config, required APIService apiService});
 
   @override
   Widget build(BuildContext context) {

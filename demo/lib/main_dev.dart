@@ -1,3 +1,4 @@
+import 'package:demo/services/user_service.dart';
 import 'package:flutter/material.dart';
 import 'package:demo/app_config.dart';
 
@@ -8,6 +9,7 @@ void main() async {
 
   final env = 'dev'; // Set the desired environment here
   final config = await AppConfig.forEnvironment(env.isNotEmpty ? env : 'dev');
+  final apiService = APIService(config);
 
-  runApp(MyApp(config: config));
+  runApp(MyApp(config: config, apiService: apiService));
 }

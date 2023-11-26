@@ -4,12 +4,16 @@ import 'package:http/http.dart' as http;
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:demo/app_config.dart';
 
 class APIService {
-  static const String baseUrl = 'http://localhost:5000';
-
+  static late final String baseUrl;
   static Dio dio = Dio();
   static CookieJar cookieJar = CookieJar();
+
+  APIService(AppConfig config) {
+    baseUrl = config.apiUrl;
+  }
 
   static void setupCookieJar() {
     dio.interceptors.add(CookieManager(cookieJar));
