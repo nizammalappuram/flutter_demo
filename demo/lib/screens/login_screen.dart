@@ -1,171 +1,9 @@
-// import 'package:flutter/material.dart';
-// import 'package:demo/services/user_service.dart';
-// import 'package:demo/app_style.dart';
-// import 'package:flutter/cupertino.dart';
-// import 'package:demo/screens/signup_screen.dart';
-// import 'package:demo/screens/dashboard_screen.dart';
-// import 'package:shared_preferences/shared_preferences.dart';
-
-// class Login extends StatefulWidget {
-//   static const String id = "/login";
-
-//   @override
-//   _LoginState createState() => _LoginState();
-// }
-
-// class _LoginState extends State<Login> {
-//   final TextEditingController emailController = TextEditingController();
-//   final TextEditingController passwordController = TextEditingController();
-
-//   Future<void> loginUser() async {
-//     final String email = emailController.text;
-//     final String password = passwordController.text;
-
-//     try {
-//       final Map<String, dynamic>? response = await APIService.loginUser(email, password);
-
-//       if (response != null && response.containsKey('statusCode') && response['statusCode'] == 200) {
-//         final String? rawCookie = response['set-cookie'];
-
-//         if (rawCookie != null) {
-//           await saveCookie(rawCookie);
-
-//           final String? token = response['token']; // Extract token from the response
-
-//           if (token != null) {
-//             // Token handling - saving token to SharedPreferences
-//             await saveToken(token);
-//           }
-
-//           // Successful login, move to dashboard screen
-//           Navigator.of(context).pushReplacementNamed(Dashboard.id);
-//         } else {
-//           // Handle null cookie if required
-//           print('Cookie is null');
-//         }
-//       } else {
-//         // Handle login failure
-//         print('Failed to log in');
-//         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-//           content: Text('Failed to log in'),
-//           duration: Duration(seconds: 3),
-//         ));
-//       }
-//     } catch (e) {
-//       // Handle network errors or exceptions
-//       print('Exception occurred: $e');
-//       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-//         content: Text('An error occurred. Please try again.'),
-//         duration: Duration(seconds: 3),
-//       ));
-//     }
-//   }
-
-//   Future<void> saveCookie(String cookie) async {
-//     SharedPreferences prefs = await SharedPreferences.getInstance();
-//     await prefs.setString('cookie', cookie);
-//   }
-
-//   Future<void> saveToken(String token) async {
-//     SharedPreferences prefs = await SharedPreferences.getInstance();
-//     await prefs.setString('token', token);
-//   }
-
-//   @override
-//   Widget build(BuildContext context) {
-//     Size size = MediaQuery.of(context).size;
-
-//     return Scaffold(
-//       body: SingleChildScrollView(
-//         child: SafeArea(
-//           child: Padding(
-//             padding: EdgeInsets.symmetric(
-//               horizontal: size.width * 0.1,
-//               vertical: size.height * 0.001,
-//             ),
-//             child: Column(
-//               children: [
-//                 Align(
-//                   alignment: Alignment.topCenter,
-//                   child: Image.asset(
-//                     'assets/images/logo.png', // Replace with your actual logo image path
-//                     height: size.height * 0.1,
-//                   ),
-//                 ),
-//                 SizedBox(height: size.height * 0.023),
-//                 Text(
-//                   "Login",
-//                   style: Theme.of(context).textTheme.headline5,
-//                 ),
-//                 SizedBox(height: size.height * 0.018),
-//                 TextField(
-//                   controller: emailController,
-//                   style: const TextStyle(color: kLightTextColor),
-//                   decoration: InputDecoration(
-//                     hintText: "Email",
-//                     // Include your email icon
-//                   ),
-//                 ),
-//                 SizedBox(height: size.height * 0.018),
-//                 TextField(
-//                   controller: passwordController,
-//                   obscureText: true,
-//                   style: const TextStyle(color: kLightTextColor),
-//                   decoration: InputDecoration(
-//                     hintText: "Password",
-//                     // Include your password icon
-//                   ),
-//                 ),
-//                 SizedBox(height: size.height * 0.025),
-//                 ElevatedButton(
-//                   onPressed: () {
-//                     loginUser();
-//                   },
-//                   child: Text(
-//                     "Login",
-//                     style: Theme.of(context).textTheme.button,
-//                   ),
-//                 ),
-//                 SizedBox(height: size.height * 0.034),
-//                 Row(
-//                   mainAxisAlignment: MainAxisAlignment.center,
-//                   children: [
-//                     Text(
-//                       "Don't have an account?\t",
-//                       style: Theme.of(context).textTheme.subtitle1,
-//                     ),
-//                     CupertinoButton(
-//                       padding: EdgeInsets.zero,
-//                       onPressed: () {
-//                         Navigator.of(context).pushNamedAndRemoveUntil(
-//                             Signup.id, (route) => false);
-//                       },
-//                       child: Text(
-//                         "Sign Up",
-//                         style: Theme.of(context)
-//                             .textTheme
-//                             .subtitle1!
-//                             .copyWith(color: kTextColor),
-//                       ),
-//                     ),
-//                   ],
-//                 ),
-//               ],
-//             ),
-//           ),
-//         ),
-//       ),
-//     );
-//   }
-// }
-
-// --------------------------------------------------------------------------
-
-import 'package:demo/screens/welcome_screen.dart';
+import 'dart:convert';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:demo/services/user_service.dart';
-import 'package:demo/app_style.dart';
+import 'package:demo/screens/welcome_screen.dart';
 import 'package:demo/screens/signup_screen.dart';
 
 class Login extends StatefulWidget {
@@ -176,10 +14,15 @@ class Login extends StatefulWidget {
 }
 
 class _LoginState extends State<Login> {
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
   String selectedRole = ''; // Initialize with the default value
+  String? errorUsername;
+  String? errorPassword;
+  String? errorRole;
+  String? errorMessage;
 
   List<Map<String, String>> roleOptions = [
     {'key': 'student', 'text': 'Student', 'value': 'student'},
@@ -189,19 +32,29 @@ class _LoginState extends State<Login> {
   ];
 
   void handleRoleSelection(String? value) {
-    // Ensure a default value is provided in case value is null
     setState(() {
       selectedRole = value ?? '';
+      errorRole = null;
     });
   }
 
   Future<void> loginUser() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
     final String username = usernameController.text;
     final String password = passwordController.text;
 
+    setState(() {
+      errorUsername = null;
+      errorPassword = null;
+      errorMessage = null;
+    });
+
     if (selectedRole.isEmpty) {
-      print('No role selected');
-      // Handle no role selected scenario
+      setState(() {
+        errorRole = 'Please select a role';
+      });
       return;
     }
 
@@ -210,41 +63,54 @@ class _LoginState extends State<Login> {
           await APIService.loginUser(username, password, selectedRole);
 
       if (response != null) {
-      print('Login Response: $response');
+        print('Login Response: $response');
 
-      if (response.containsKey('token')) {
-        final String? token = response['token'];
+        if (response.containsKey('token')) {
+          final String? token = response['token'];
 
-        if (token != null) {
-          // Store the token locally using shared_preferences
-          SharedPreferences prefs = await SharedPreferences.getInstance();
-          await prefs.setString('token', token);
+          final parts = token!.split('.');
+          if (parts.length != 3) {
+            throw Exception('Invalid token');
+          }
 
-          // Handle successful login
+          final payload = parts[1];
+          final normalized = base64Url.normalize(payload);
+          final decodedPayload = utf8.decode(base64Url.decode(normalized));
+
+          final payloadMap = json.decode(decodedPayload);
+          print('Decoded Token Payload: $payloadMap');
+
+          final prefs = await SharedPreferences.getInstance();
+          prefs.setString('token', token);
+          print('Token saved to shared preferences');
+
           print('Login successful!');
-
-          // Navigate to the dashboard screen or any other screen
           Navigator.of(context).pushReplacementNamed(WelcomeScreen.id);
-        } else {
-          print('Token is null');
-          // Handle token null scenario
+          return;
         }
-      } else {
-        print('Response does not contain a token');
-        // Handle response without a token
       }
-    } else {
-      print('Failed to log in. Response is null.');
-      // Handle null response
+      print('Failed to log in. Invalid response or token');
+      setState(() {
+        errorMessage = 'Invalid response or token';
+      });
+    } on DioError catch (e) {
+      print('DioError occurred: $e');
+      if (e.response?.statusCode == 401) {
+        setState(() {
+          errorMessage = 'Invalid credentials. Please check your username, password, and role.';
+        });
+      } else {
+        setState(() {
+          errorMessage = 'Unexpected error occurred: $e';
+        });
+      }
+    } on Exception catch (e) {
+      print('Exception occurred: $e');
+      setState(() {
+        errorMessage = 'Error occurred: $e';
+      });
     }
-  } on Exception catch (e) {
-    print('Exception occurred: $e');
-    // Handle other exceptions
-  } catch (e) {
-    print('Unexpected error: $e');
-    // Handle unexpected errors
   }
-}
 
   @override
   Widget build(BuildContext context) {
@@ -258,121 +124,152 @@ class _LoginState extends State<Login> {
               horizontal: size.width * 0.1,
               vertical: size.height * 0.05,
             ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: <Widget>[
-                Image.asset(
-                  'assets/images/logo.png', // Replace with your actual logo image path
-                  height: size.height * 0.2,
-                ),
-                SizedBox(height: size.height * 0.05),
-                Text(
-                  "Welcome!",
-                  style: Theme.of(context).textTheme.headline5,
-                ),
-                SizedBox(height: size.height * 0.05),
-                TextField(
-                  controller: usernameController,
-                  style: const TextStyle(color: kLightTextColor),
-                  decoration: InputDecoration(
-                    hintText: "Username",
-                    // Include your username icon
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: <Widget>[
+                  Image.asset(
+                    'assets/images/logo.png',
+                    height: size.height * 0.2,
                   ),
-                ),
-                SizedBox(height: size.height * 0.025),
-                TextField(
-                  controller: passwordController,
-                  obscureText: true,
-                  style: const TextStyle(color: kLightTextColor),
-                  decoration: InputDecoration(
-                    hintText: "Password",
-                    // Include your password icon
+                  SizedBox(height: size.height * 0.05),
+                  Text(
+                    "Welcome!",
+                    style: Theme.of(context).textTheme.headline5,
                   ),
-                ),
-                SizedBox(height: size.height * 0.05),
-                // Use ElevatedButtons for role selection
-                Wrap(
-                  alignment: WrapAlignment.center,
-                  spacing: 10.0,
-                  runSpacing: 10.0,
-                  children: roleOptions.map((role) {
-                    return ElevatedButton(
-                      onPressed: () {
-                        handleRoleSelection(role['value']);
-                      },
-                      style: ElevatedButton.styleFrom(
-                        primary: role['value'] == selectedRole
-                            ? Colors
-                                .blue // Change the color for the selected role
-                            : null,
-                        padding: EdgeInsets.symmetric(
-                          vertical: 15.0,
-                          horizontal: 20.0,
+                  SizedBox(height: size.height * 0.05),
+                  TextFormField(
+                    controller: usernameController,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Username can\'t be empty';
+                      }
+                      return null;
+                    },
+                    style: TextStyle(color: Colors.black),
+                    decoration: InputDecoration(
+                      hintText: "Username",
+                    ),
+                  ),
+                  SizedBox(height: size.height * 0.025),
+                  TextFormField(
+                    controller: passwordController,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Password can\'t be empty';
+                      }
+                      return null;
+                    },
+                    obscureText: true,
+                    style: TextStyle(color: Colors.black),
+                    decoration: InputDecoration(
+                      hintText: "Password",
+                    ),
+                  ),
+                  SizedBox(height: size.height * 0.05),
+                  Wrap(
+                    alignment: WrapAlignment.center,
+                    spacing: 10.0,
+                    runSpacing: 10.0,
+                    children: roleOptions.map((role) {
+                      return ElevatedButton(
+                        onPressed: () {
+                          handleRoleSelection(role['value']);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          primary: role['value'] == selectedRole
+                              ? Colors.blue
+                              : null,
+                          padding: EdgeInsets.symmetric(
+                            vertical: 15.0,
+                            horizontal: 20.0,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20.0),
+                          ),
                         ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20.0),
+                        child: Text(
+                          role['text']!,
+                          style: TextStyle(fontSize: 16.0),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                  SizedBox(height: size.height * 0.05),
+                  ElevatedButton(
+                    onPressed: loginUser,
+                    style: ElevatedButton.styleFrom(
+                      padding: EdgeInsets.symmetric(
+                        vertical: 15.0,
+                        horizontal: 40.0,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20.0),
+                      ),
+                    ),
+                    child: Text(
+                      "Login",
+                      style: Theme.of(context).textTheme.button,
+                    ),
+                  ),
+                  SizedBox(height: size.height * 0.03),
+                  if (_hasError())
+                    Container(
+                      margin: EdgeInsets.symmetric(horizontal: 20.0),
+                      child: Column(
+                        children: [
+                          if (errorUsername != null)
+                            Text(errorUsername!,
+                                style: TextStyle(color: Colors.red)),
+                          if (errorPassword != null)
+                            Text(errorPassword!,
+                                style: TextStyle(color: Colors.red)),
+                          if (errorRole != null)
+                            Text(errorRole!,
+                                style: TextStyle(color: Colors.red)),
+                          if (errorMessage != null)
+                            Text(errorMessage!,
+                                style: TextStyle(color: Colors.red)),
+                        ],
+                      ),
+                    ),
+                  SizedBox(height: size.height * 0.02),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        "Don't have an account? ",
+                        style: Theme.of(context).textTheme.subtitle1,
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.of(context).pushNamed(Signup.id);
+                        },
+                        child: Text(
+                          "Sign Up",
+                          style: Theme.of(context)
+                              .textTheme
+                              .subtitle1!
+                              .copyWith(color: Colors.black),
                         ),
                       ),
-                      child: Text(
-                        role['text']!,
-                        style: TextStyle(fontSize: 16.0),
-                      ),
-                    );
-                  }).toList(),
-                ),
-                SizedBox(height: size.height * 0.05),
-                ElevatedButton(
-                  onPressed: () {
-                    loginUser();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    padding: EdgeInsets.symmetric(
-                      vertical: 15.0,
-                      horizontal: 40.0,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20.0),
-                    ),
+                    ],
                   ),
-                  child: Text(
-                    "Login",
-                    style: Theme.of(context).textTheme.button,
-                  ),
-                ),
-                SizedBox(height: size.height * 0.03),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      "Don't have an account? ",
-                      style: Theme.of(context).textTheme.subtitle1,
-                    ),
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.of(context).pushNamed(Signup.id);
-                      },
-                      child: Text(
-                        "Sign Up",
-                        style: Theme.of(context)
-                            .textTheme
-                            .subtitle1!
-                            .copyWith(color: kTextColor),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
       ),
     );
   }
+
+  bool _hasError() {
+    return errorUsername != null ||
+        errorPassword != null ||
+        errorRole != null ||
+        errorMessage != null;
+  }
 }
-
-
-
-
-
-

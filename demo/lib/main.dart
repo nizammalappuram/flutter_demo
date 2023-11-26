@@ -1,7 +1,10 @@
-// // import 'package:flutter/material.dart';
-// // import 'package:demo/screens/login_screen.dart';
-// // import 'package:demo/screens/signup_screen.dart';
+
 // // import 'package:demo/screens/home_screen.dart';
+// // import 'package:demo/screens/welcome_screen.dart';
+// // import 'package:flutter/material.dart';
+// // import 'package:demo/screens/signup_screen.dart';
+// // import 'package:demo/screens/login_screen.dart';
+// // // ignore: duplicate_import
 
 // // void main() {
 // //   runApp(MyApp());
@@ -11,21 +14,25 @@
 // //   @override
 // //   Widget build(BuildContext context) {
 // //     return MaterialApp(
-// //       title: 'Your App',
-// //       initialRoute: SignupScreen.id,
+// //       debugShowCheckedModeBanner: false,
+// //       title: 'Eduvocate',
+// //       initialRoute: Signup.id,
 // //       routes: {
-// //         LoginScreen.id: (context) => LoginScreen(),
-// //         SignupScreen.id: (context) => SignupScreen(),
-// //         HomeScreen.id: (context) => HomeScreen(),
+// //         Signup.id: (context) => Signup(),
+// //         Login.id: (context) => Login(),
+// //         WelcomeScreen.id: (context) => WelcomeScreen(),
+// //         Home.id: (context) => Home()
 // //       },
 // //     );
 // //   }
 // // }
 
+
 // import 'package:flutter/material.dart';
+// import 'package:demo/screens/home_screen.dart';
+// import 'package:demo/screens/welcome_screen.dart';
 // import 'package:demo/screens/signup_screen.dart';
 // import 'package:demo/screens/login_screen.dart';
-// import 'package:demo/screens/dashboard_screen.dart'; // Assuming the dashboard screen is named 'Dashboard'
 
 // void main() {
 //   runApp(MyApp());
@@ -35,41 +42,42 @@
 //   @override
 //   Widget build(BuildContext context) {
 //     return MaterialApp(
+//       debugShowCheckedModeBanner: false,
 //       title: 'Eduvocate',
-//       initialRoute: Signup.id,
+//       initialRoute: '/', // Update with the relevant initial route
 //       routes: {
+//         '/': (context) => HomeScreen(), // Update this with your landing page widget
 //         Signup.id: (context) => Signup(),
 //         Login.id: (context) => Login(),
-//         Dashboard.id: (context) =>
-//             Dashboard(), // Replace 'Dashboard' with your actual dashboard screen
+//         WelcomeScreen.id: (context) => WelcomeScreen(),
 //       },
 //     );
 //   }
 // }
 
+import 'package:flutter/material.dart';
 import 'package:demo/screens/home_screen.dart';
 import 'package:demo/screens/welcome_screen.dart';
-import 'package:flutter/material.dart';
 import 'package:demo/screens/signup_screen.dart';
 import 'package:demo/screens/login_screen.dart';
-// ignore: duplicate_import
-
-void main() {
-  runApp(MyApp());
-}
+import 'package:demo/app_config.dart';
 
 class MyApp extends StatelessWidget {
+  final AppConfig config;
+
+  MyApp({required this.config});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Eduvocate',
-      initialRoute: Signup.id,
+      initialRoute: '/',
       routes: {
+        '/': (context) => HomeScreen(config: config),
         Signup.id: (context) => Signup(),
         Login.id: (context) => Login(),
         WelcomeScreen.id: (context) => WelcomeScreen(),
-        Home.id: (context) => Home()
       },
     );
   }
