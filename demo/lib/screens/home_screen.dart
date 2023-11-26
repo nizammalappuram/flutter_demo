@@ -203,7 +203,6 @@ class HomeScreen extends StatelessWidget {
       ),
       bottomNavigationBar: Container(
         padding: EdgeInsets.all(20.0),
-        color: Colors.grey[300],
         child: Text(
           '© Eduvocate 2023. All rights reserved.',
           textAlign: TextAlign.center,
