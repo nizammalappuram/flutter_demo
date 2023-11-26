@@ -1,5 +1,5 @@
-import 'package:demo/screens/home_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:demo/screens/forms/studentform.dart';
 
 class WelcomeScreen extends StatefulWidget {
   static const String id = "/WelcomeScreen";
@@ -20,11 +20,12 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
             Stack(
               children: [
                 Container(
-                    width: MediaQuery.of(context).size.width,
-                    height: MediaQuery.of(context).size.height / 1.6,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                    )),
+                  width: MediaQuery.of(context).size.width,
+                  height: MediaQuery.of(context).size.height / 1.6,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                  ),
+                ),
                 Container(
                   width: MediaQuery.of(context).size.width,
                   height: MediaQuery.of(context).size.height / 1.6,
@@ -59,10 +60,11 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                 height: MediaQuery.of(context).size.height / 2.666,
                 padding: EdgeInsets.only(top: 40, bottom: 30),
                 decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(70),
-                    )),
+                  color: Colors.white,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(70),
+                  ),
+                ),
                 child: Column(
                   children: [
                     Text(
@@ -95,13 +97,21 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                           Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => Home(),
+                              builder: (context) => StudentForm(
+                                onNext: () {
+                                  // Handle actions after form submission
+                                  print('Form submitted');
+                                  // Add navigation or other logic here
+                                },
+                              ),
                             ),
                           );
                         },
                         child: Container(
                           padding: EdgeInsets.symmetric(
-                              vertical: 15, horizontal: 80),
+                            vertical: 15,
+                            horizontal: 80,
+                          ),
                           child: Text(
                             "Get Started",
                             style: TextStyle(
