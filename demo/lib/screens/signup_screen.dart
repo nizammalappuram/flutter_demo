@@ -245,7 +245,7 @@ class _SignupState extends State<Signup> {
                     onPressed: registerUser,
                     child: Text(
                       "Sign Up",
-                      style: TextStyle(color: Colors.white),
+                      style: TextStyle(color: Colors.black),
                     ),
                   ),
                   if (error.isNotEmpty)
