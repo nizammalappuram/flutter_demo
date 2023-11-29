@@ -26,3 +26,6 @@ Future<void> writeLogToFile(String log) async {
     print('Error writing to log file: $e');
   }
 }
+
+
+

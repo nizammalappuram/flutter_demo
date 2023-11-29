@@ -62,16 +62,7 @@ import 'package:demo/screens/welcome_screen.dart';
 import 'package:demo/screens/signup_screen.dart';
 import 'package:demo/screens/login_screen.dart';
 import 'package:demo/app_config.dart';
-import 'package:demo/logging/logging_setup.dart'; // Import the logging setup file
 
-void main() {
-  WidgetsFlutterBinding.ensureInitialized();
-  setupLogging().then((_) {
-    final AppConfig config = AppConfig(apiUrl: 'dev'); // Instantiate your AppConfig
-    final APIService apiService = APIService(config); // Instantiate your APIService
-    runApp(MyApp(config: config, apiService: apiService)); // Provide both config and apiService
-  });
-}
 
 class MyApp extends StatelessWidget {
   final AppConfig config;
